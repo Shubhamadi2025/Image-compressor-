@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Compressor 📁➡️📦</title>
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --secondary: #45a049;
+      --background: #f4f4f4;
+      --text-color: #333;
+    }
+
+    [data-theme="dark"] {
+      --background: #1e1e1e;
+      --text-color: #f1f1f1;
+    }
+
+    [data-color="green"] { --primary: #4CAF50; --secondary: #45a049; }
+    [data-color="blue"] { --primary: #2196F3; --secondary: #1976D2; }
+    [data-color="red"] { --primary: #F44336; --secondary: #D32F2F; }
+    [data-color="orange"] { --primary: #FF9800; --secondary: #EF6C00; }
+    [data-color="purple"] { --primary: #9C27B0; --secondary: #7B1FA2; }
+    [data-color="teal"] { --primary: #009688; --secondary: #00796B; }
+    [data-color="gray"] { --primary: #607D8B; --secondary: #455A64; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--background);
+      color: var(--text-color);
+      padding: 20px;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .mode-switch, .theme-switch {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .mode-switch button,
+    .theme-switch button {
+      padding: 0.4rem 0.6rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .theme-switch button {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      padding: 0;
+    }
+
+    .upload-section {
+      background: white;
+      color: var(--text-color);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .custom-slider {
+      width: 100%;
+      margin: 1rem 0;
+    }
+
+    .compress-btn {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      font-size: 1.1rem;
+    }
+
+    .compress-btn:hover {
+      background: var(--secondary);
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-size: 0.9rem;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 0.7rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .results-table th {
+      background: var(--primary);
+      color: white;
+    }
+
+    .download-btn {
+      background: var(--primary);
+      color: white;
+      padding: 0.3rem 0.5rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    .download-btn:hover {
+      background: var(--secondary);
+    }
+
+    #previewContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 1rem;
+    }
+
+    .preview-item {
+      position: relative;
+    }
+
+    .preview-item img {
+      max-width: 100px;
+      max-height: 100px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .remove-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .history {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      max-height: 200px;
+      overflow-y: auto;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    .history h2 {
+      margin-bottom: 1rem;
+      color: white;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-item button.download-btn {
+      background: white;
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body data-color="green">
+  <div class="container">
+    <div class="header">
+      <h1>Image Compressor 📁➡️📦</h1>
+      <div class="mode-switch">
+        <button onclick="setTheme('light')">☀️</button>
+        <button onclick="setTheme('dark')">🌙</button>
+      </div>
+      <div class="theme-switch">
+        <button style="background:#4CAF50" onclick="setColor('green')"></button>
+        <button style="background:#2196F3" onclick="setColor('blue')"></button>
+        <button style="background:#F44336" onclick="setColor('red')"></button>
+        <button style="background:#FF9800" onclick="setColor('orange')"></button>
+        <button style="background:#9C27B0" onclick="setColor('purple')"></button>
+        <button style="background:#009688" onclick="setColor('teal')"></button>
+        <button style="background:#607D8B" onclick="setColor('gray')"></button>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <input type="file" id="fileInput" multiple accept="image/*">
+      <div id="previewContainer"></div>
+      <div class="quality-control">
+        <label for="quality">Compression Level: <span id="qualityValue">80</span>%</label>
+        <input type="range" id="quality" class="custom-slider" min="0" max="100" value="80">
+      </div>
+      <button class="compress-btn" onclick="compressFiles()">Compress Files 🚀</button>
+    </div>
+
+    <table class="results-table">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>File Name</th>
+          <th>Original Size</th>
+          <th>Compressed Size</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody"></tbody>
+    </table>
+
+    <div class="history">
+      <h2>Download History</h2>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const qualitySlider = document.getElementById('quality');
+    const qualityValue = document.getElementById('qualityValue');
+    const previewContainer = document.getElementById('previewContainer');
+    const resultsBody = document.getElementById('resultsBody');
+    const historyList = document.getElementById('historyList');
+    const compressedFiles = new Map();
+    let selectedFiles = [];
+
+    qualitySlider.addEventListener('input', () => {
+      qualityValue.textContent = qualitySlider.value;
+    });
+
+    fileInput.addEventListener('change', () => {
+      selectedFiles = Array.from(fileInput.files);
+      renderPreviews();
+    });
+
+    function renderPreviews() {
+      previewContainer.innerHTML = '';
+      selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const div = document.createElement('div');
+          div.className = 'preview-item';
+          div.innerHTML = `
+            <img src="${e.target.result}" alt="preview">
+            <button class="remove-btn" onclick="removeImage(${index})">❌</button>
+          `;
+          previewContainer.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removeImage(index) {
+      selectedFiles.splice(index, 1);
+      renderPreviews();
+    }
+
+    function setTheme(mode) {
+      document.documentElement.setAttribute('data-theme', mode);
+    }
+
+    function setColor(color) {
+      document.body.setAttribute('data-color', color);
+    }
+
+    async function compressFiles() {
+      resultsBody.innerHTML = '';
+      if (!selectedFiles.length) return alert('Please select files!');
+
+      for (const file of selectedFiles) {
+        const row = createFileRow(file);
+        resultsBody.appendChild(row);
+
+        try {
+          const compressedFile = await compressImage(file, qualitySlider.value);
+          compressedFiles.set(compressedFile.name, { file: compressedFile, original: file });
+          updateRowAfterCompression(row, file, compressedFile);
+        } catch (error) {
+          row.cells[0].innerHTML = '❌';
+          row.cells[4].textContent = 'Error';
+        }
+      }
+    }
+
+    function createFileRow(file) {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>⏳</td>
+        <td>${file.name}</td>
+        <td>${formatFileSize(file.size)}</td>
+        <td>-</td>
+        <td>...</td>
+      `;
+      return row;
+    }
+
+    function updateRowAfterCompression(row, originalFile, compressedFile) {
+      const savings = ((1 - compressedFile.size / originalFile.size) * 100).toFixed(1);
+      row.cells[0].innerHTML = '✅';
+      row.cells[3].textContent = `${formatFileSize(compressedFile.size)} (${savings}% saved)`;
+      row.cells[4].innerHTML = `
+        <button class="download-btn" data-filename="${compressedFile.name}">Download ⬇️</button>
+      `;
+    }
+
+    resultsBody.addEventListener('click', (e) => {
+      if (e.target.classList.contains('download-btn')) {
+        const fileName = e.target.dataset.filename;
+        const data = compressedFiles.get(fileName);
+        if (data) {
+          downloadFile(data.file);
+          addToHistory(data.file, data.original);
+        }
+      }
+    });
+
+    function addToHistory(file, originalFile) {
+      const saved = ((1 - file.size / originalFile.size) * 100).toFixed(1);
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div><strong>${file.name}</strong> - ${formatFileSize(file.size)} (${saved}% saved)</div>
+        <button class="download-btn" data-filename="${file.name}">Download ⬇️</button>
+      `;
+      historyList.prepend(item);
+    }
+
+    historyList.addEventListener('click', (e) => {
+      if (e.target.classList.contains('download-btn')) {
+        const fileName = e.target.dataset.filename;
+        const data = compressedFiles.get(fileName);
+        if (data) downloadFile(data.file);
+      }
+    });
+
+    function compressImage(file, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(blob => {
+              resolve(new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              }));
+            }, 'image/jpeg', quality / 100);
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function downloadFile(file) {
+      const blob = new Blob([file], { type: file.type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `compressed_${file.name}`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  </script>
+</body>
+          </html>
